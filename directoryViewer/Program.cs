@@ -7,13 +7,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
 using System.Xml;
 
-namespace pt_lab1
+namespace directoryViewer
 {
     internal static class Program
     {
         private static void Main(string[] args)
         {
-            //pobranie katalogu z parametru wywołania
+            //Extract directory from start arguments
             var di = new DirectoryInfo("C:\\Windows\\");
             try
             {
@@ -25,44 +25,44 @@ namespace pt_lab1
             }
             finally
             {
-                Console.WriteLine("Użyto domyślnej ścieżki - C:\\Windows\\");
+                Console.WriteLine("Default path used - C:\\Windows\\");
             }
-            var pz = new PokazZawartosc();
+            var dc = new DisplayContent();
 
-            //pokazanie zawartości folderu
-            pz.Zawartosc(di, 0);
+            //Display directory content
+            dc.Content(di, 0);
 
-            //pokazanie najstarszego elementu folderu
+            //Display oldest element in directory
             var oldest = di.OldestFile();
-            Console.WriteLine("Najstarszy plik: " + oldest + " " + oldest.LastWriteTime);
+            Console.WriteLine("Oldest file: " + oldest + " " + oldest.LastWriteTime);
 
-            //serializacja i deserializacja
+            //serialization and deserialization
             IFormatter formatter = new BinaryFormatter();
             try
             {
-                Stream output = File.OpenWrite("kolekcja.bin");
-                formatter.Serialize(output, pz.Kolekcja);
+                Stream output = File.OpenWrite("collection.bin");
+                formatter.Serialize(output, dc.Collection);
                 output.Close();
             }
             catch (Exception e)
             {
-                Console.WriteLine("Serializacja się nie udała!");
+                Console.WriteLine("Serialization failed!");
                 Console.WriteLine(e.Message);
             }
             try
             {
-                Stream input = File.OpenRead("kolekcja.bin");
+                Stream input = File.OpenRead("collection.bin");
 
-                //wypisanie posortowanych plików w folderze głównym
-                var nowaKolekcja = (SortedDictionary<string, long>) formatter.Deserialize(input);
-                foreach (var dic in nowaKolekcja)
+                //output sorted files in main directory
+                var newCollection = (SortedDictionary<string, long>) formatter.Deserialize(input);
+                foreach (var c in newCollection)
                 {
-                    Console.WriteLine("{0} -> {1}", dic.Key, dic.Value);
+                    Console.WriteLine("{0} -> {1}", c.Key, c.Value);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Deserializacja się nie udała!");
+                Console.WriteLine("Deserialization failed!");
                 Console.WriteLine(e.Message);
             }
 
@@ -70,53 +70,53 @@ namespace pt_lab1
         }
     }
 
-    internal class PokazZawartosc
+    internal class DisplayContent
     {
-        public readonly SortedDictionary<string, long> Kolekcja = new SortedDictionary<string, long>(new NameComparer());
+        public readonly SortedDictionary<string, long> Collection = new SortedDictionary<string, long>(new NameComparer());
 
-        public void Zawartosc(DirectoryInfo di, int zaglebienie)
+        public void Content(DirectoryInfo di, int depth)
         {
-            string nazwa;
-            long dlugosc;
+            string name;
+            long length;
             try
             {
-                nazwa = di.Name;
-                dlugosc = di.EnumerateFileSystemInfos().Count();
+                name = di.Name;
+                length = di.EnumerateFileSystemInfos().Count();
             }
             catch (UnauthorizedAccessException e)
             {
-                Console.WriteLine("Napotkano element chroniony!\n" + e.Message);
+                Console.WriteLine("Protected content encountered\n" + e.Message);
                 return;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Napotkano błąd podzczas odczytu pliku!\n" + e.Message);
+                Console.WriteLine("Error encountered during file reading\n" + e.Message);
                 return;
             }
 
-            if (zaglebienie == 0)
+            if (depth == 0)
             {
-                Kolekcja.Add(nazwa, dlugosc);
+                Collection.Add(name, length);
             }
 
-            var dirTekst = nazwa + " (" + dlugosc + ") " + di.Rahs();
-            Console.WriteLine(dirTekst.PadLeft(dirTekst.Length + zaglebienie, '\t'));
+            var dirText = name + " (" + length + ") " + di.Rahs();
+            Console.WriteLine(dirText.PadLeft(dirText.Length + depth, '\t'));
 
             foreach (var dir in di.GetDirectories())
             {
-                Zawartosc(new DirectoryInfo(di + "\\" + dir), zaglebienie + 1);
+                Content(new DirectoryInfo(di + "\\" + dir), depth + 1);
             }
             foreach (var fi in di.GetFiles())
             {
-                nazwa = fi.ToString();
-                dlugosc = fi.Length;
-                if (zaglebienie == 0)
+                name = fi.ToString();
+                length = fi.Length;
+                if (depth == 0)
                 {
-                    Kolekcja.Add(nazwa, dlugosc);
+                    Collection.Add(name, length);
                 }
 
-                var fileTekst = nazwa + " " + dlugosc + " bajtow " + fi.Rahs();
-                Console.WriteLine(fileTekst.PadLeft(fileTekst.Length + zaglebienie, '\t'));
+                var fileText = name + " " + length + " bytes " + fi.Rahs();
+                Console.WriteLine(fileText.PadLeft(fileText.Length + depth, '\t'));
             }
         }
 

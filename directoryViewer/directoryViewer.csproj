@@ -7,8 +7,8 @@
     <ProjectGuid>{B3402001-8154-4B7F-935E-15611F91DD30}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>pt_lab1</RootNamespace>
-    <AssemblyName>pt_lab1</AssemblyName>
+    <RootNamespace>directoryViewer</RootNamespace>
+    <AssemblyName>directoryViewer</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
